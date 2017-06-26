@@ -1,0 +1,25 @@
+version: 2
+
+jobs:
+  build:
+    working_directory: ~/existing-repo
+    docker:
+      - image: circleci/ruby:2.4.1
+    steps:
+      - checkout
+
+      # Restore bundle cache
+      - type: cache-restore
+        key: gatekeeper-{{ checksum "Gemfile.lock" }}
+
+      # Bundle install dependencies
+      - run: bundle install --path vendor/bundle
+
+      # Store bundle cache
+      - type: cache-save
+        key: gatekeeper-{{ checksum "Gemfile.lock" }}
+        paths:
+          - vendor/bundle
+
+      # Run RSpec
+      - run: bin/rspec spec
