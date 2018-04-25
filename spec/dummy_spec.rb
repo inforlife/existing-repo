@@ -1,5 +1,5 @@
 RSpec.describe 'Dummy' do
-  it 'is 1 equal 1' do
-    expect(1).to eq(1)
+  it 'is 2 equal 2' do
+    expect(2).to eq(2)
   end
 end
