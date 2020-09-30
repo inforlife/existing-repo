@@ -1,0 +1,48 @@
+name: continuous-integration
+
+on:
+  pull_request:
+    branches: [ '*' ]
+    paths-ignore:
+      - 'docs/**'
+  push:
+    branches: [ master ]
+    paths-ignore:
+      - 'docs/**'
+jobs:
+  github-continuous-integration:
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, 'skip ci')"
+    
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 2.4.1
+
+      - name: Cache gems
+        uses: actions/cache@v2
+        with:
+          path: vendor/bundle
+          key: ${{ runner.os }}-gem-${{ hashFiles('**/Gemfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-gem-
+
+      - name: Install gems
+        env:
+          BUNDLE_WITHOUT: development production
+        run: |
+          gem update --system
+          gem install bundler --no-document
+          bundle config path vendor/bundle
+          bundle install --jobs 4 --retry 3
+
+      - name: Run RSpec
+        env:
+          RUBYOPT: -W0
+          APP_ENV: test
+          CI: true
+        run: |
+          bin/rspec spec --fail-fast --format progress
